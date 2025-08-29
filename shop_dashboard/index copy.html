@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ระบบจัดการร้านค้า</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .success-animation { animation: successPulse 0.6s ease-in-out; }
+        @keyframes successPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .cart-bounce { animation: cartBounce 0.3s ease-in-out; }
+        @keyframes cartBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 text-white p-4 fixed w-full top-0 z-50">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button id="menuToggle" class="lg:hidden">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-xl font-bold">Admin Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="cartCount" class="bg-red-500 text-white px-2 py-1 rounded-full text-sm">0</span>
+                <i class="fas fa-shopping-cart text-xl"></i>
+                <span>Admin</span>
+                <button onclick="clearAllData()" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                    <i class="fas fa-trash mr-1"></i>ล้างข้อมูล
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-16 h-full w-64 bg-gray-800 text-white transform -translate-x-full lg:translate-x-0 sidebar-transition z-40">
+        <div class="p-4">
+            <ul class="space-y-2">
+                <li><a href="#" onclick="showSection('dashboard')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-tachometer-alt mr-2"></i>แดชบอร์ด</a></li>
+                <li><a href="#" onclick="showSection('products')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-box mr-2"></i>จัดการสินค้า</a></li>
+                <li><a href="#" onclick="showSection('users')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-users mr-2"></i>จัดการผู้ใช้</a></li>
+                <li><a href="#" onclick="showSection('shop')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-store mr-2"></i>หน้าร้านค้า</a></li>
+                <li><a href="#" onclick="showSection('orders')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-shopping-bag mr-2"></i>คำสั่งซื้อ</a></li>
+                <li><a href="#" onclick="showSection('reports')" class="block p-3 rounded hover:bg-gray-700"><i class="fas fa-chart-bar mr-2"></i>รายงานสถิติ</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 pt-16 min-h-screen">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section p-6">
+            <h2 class="text-2xl font-bold mb-6">แดชบอร์ด</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-500 text-white rounded-full">
+                            <i class="fas fa-box text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600">สินค้าทั้งหมด</p>
+                            <p id="totalProducts" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-500 text-white rounded-full">
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600">ผู้ใช้ทั้งหมด</p>
+                            <p id="totalUsers" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-500 text-white rounded-full">
+                            <i class="fas fa-shopping-bag text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600">คำสั่งซื้อ</p>
+                            <p id="totalOrders" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-red-500 text-white rounded-full">
+                            <i class="fas fa-dollar-sign text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600">ยอดขาย</p>
+                            <p id="totalSales" class="text-2xl font-bold">฿0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div id="products" class="section p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">จัดการสินค้า</h2>
+                <button onclick="showAddProductForm()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    <i class="fas fa-plus mr-2"></i>เพิ่มสินค้า
+                </button>
+            </div>
+
+            <!-- Add Product Form -->
+            <div id="addProductForm" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+                <h3 class="text-lg font-bold mb-4">เพิ่มสินค้าใหม่</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="productName" placeholder="ชื่อสินค้า" class="border p-3 rounded">
+                    <input type="number" id="productPrice" placeholder="ราคา" class="border p-3 rounded">
+                    <input type="number" id="productDiscount" placeholder="ส่วนลด (%)" class="border p-3 rounded" min="0" max="100">
+                    <input type="text" id="productCategory" placeholder="หมวดหมู่" class="border p-3 rounded">
+                    <textarea id="productDescription" placeholder="รายละเอียดสินค้า" class="border p-3 rounded col-span-1 md:col-span-2"></textarea>
+                    <input type="text" id="productImage" placeholder="URL รูปภาพ" class="border p-3 rounded col-span-1 md:col-span-2">
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button onclick="addProduct()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">บันทึก</button>
+                    <button onclick="hideAddProductForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">ยกเลิก</button>
+                </div>
+            </div>
+
+            <!-- Edit Product Form -->
+            <div id="editProductForm" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+                <h3 class="text-lg font-bold mb-4">แก้ไขสินค้า</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="editProductName" placeholder="ชื่อสินค้า" class="border p-3 rounded">
+                    <input type="number" id="editProductPrice" placeholder="ราคา" class="border p-3 rounded">
+                    <input type="number" id="editProductDiscount" placeholder="ส่วนลด (%)" class="border p-3 rounded" min="0" max="100">
+                    <input type="text" id="editProductCategory" placeholder="หมวดหมู่" class="border p-3 rounded">
+                    <textarea id="editProductDescription" placeholder="รายละเอียดสินค้า" class="border p-3 rounded col-span-1 md:col-span-2"></textarea>
+                    <input type="text" id="editProductImage" placeholder="URL รูปภาพ" class="border p-3 rounded col-span-1 md:col-span-2">
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button onclick="updateProduct()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">บันทึกการแก้ไข</button>
+                    <button onclick="hideEditProductForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">ยกเลิก</button>
+                </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-4 text-left">รูปภาพ</th>
+                            <th class="p-4 text-left">ชื่อสินค้า</th>
+                            <th class="p-4 text-left">ราคา</th>
+                            <th class="p-4 text-left">ส่วนลด</th>
+                            <th class="p-4 text-left">หมวดหมู่</th>
+                            <th class="p-4 text-left">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable">
+                        <!-- Products will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users" class="section p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">จัดการผู้ใช้</h2>
+                <button onclick="showAddUserForm()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    <i class="fas fa-plus mr-2"></i>เพิ่มผู้ใช้
+                </button>
+            </div>
+
+            <!-- Add User Form -->
+            <div id="addUserForm" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+                <h3 class="text-lg font-bold mb-4">เพิ่มผู้ใช้ใหม่</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="userName" placeholder="ชื่อผู้ใช้" class="border p-3 rounded">
+                    <input type="email" id="userEmail" placeholder="อีเมล" class="border p-3 rounded">
+                    <input type="text" id="userPhone" placeholder="เบอร์โทรศัพท์" class="border p-3 rounded">
+                    <select id="userRole" class="border p-3 rounded">
+                        <option value="user">ผู้ใช้ทั่วไป</option>
+                        <option value="admin">ผู้ดูแลระบบ</option>
+                    </select>
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button onclick="addUser()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">บันทึก</button>
+                    <button onclick="hideAddUserForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">ยกเลิก</button>
+                </div>
+            </div>
+
+            <!-- Users List -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-4 text-left">ชื่อผู้ใช้</th>
+                            <th class="p-4 text-left">อีเมล</th>
+                            <th class="p-4 text-left">เบอร์โทรศัพท์</th>
+                            <th class="p-4 text-left">บทบาท</th>
+                            <th class="p-4 text-left">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Shop Section -->
+        <div id="shop" class="section p-6 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">ร้านค้าออนไลน์</h2>
+            
+            <!-- Search and Filter -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="searchProducts" placeholder="ค้นหาสินค้า..." class="flex-1 border p-3 rounded">
+                    <select id="filterCategory" class="border p-3 rounded">
+                        <option value="">ทุกหมวดหมู่</option>
+                    </select>
+                    <button onclick="filterProducts()" class="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700">ค้นหา</button>
+                </div>
+            </div>
+
+            <!-- Shopping Cart -->
+            <div id="cartSection" class="bg-white p-4 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-bold mb-4">ตะกร้าสินค้า (<span id="cartItemCount">0</span> รายการ)</h3>
+                <div id="cartItems" class="space-y-2 mb-4">
+                    <!-- Cart items will be displayed here -->
+                </div>
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-bold">รวมทั้งหมด:</span>
+                        <span id="cartTotal" class="text-xl font-bold text-green-600">฿0</span>
+                    </div>
+                    <button onclick="checkout()" class="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 disabled:bg-gray-400" id="checkoutBtn" disabled>
+                        ชำระเงิน
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="shopProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Shop products will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="orders" class="section p-6 hidden">
+            <h2 class="text-2xl font-bold mb-6">คำสั่งซื้อ</h2>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-4 text-left">รหัสคำสั่งซื้อ</th>
+                            <th class="p-4 text-left">วันที่</th>
+                            <th class="p-4 text-left">รายการสินค้า</th>
+                            <th class="p-4 text-left">ยอดรวม</th>
+                            <th class="p-4 text-left">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTable">
+                        <!-- Orders will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="section p-6 hidden">
+            <h2 class="text-2xl font-bold mb-6">รายงานสถิติ</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-bold mb-4">สินค้าขายดี</h3>
+                    <div id="topProducts" class="space-y-2">
+                        <!-- Top products will be loaded here -->
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-bold mb-4">สถิติการขาย</h3>
+                    <div id="salesStats" class="space-y-2">
+                        <!-- Sales stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center success-animation">
+            <i class="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">สำเร็จ!</h3>
+            <p id="successMessage" class="text-gray-600 mb-4">การดำเนินการเสร็จสิ้น</p>
+            <button onclick="closeSuccessModal()" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">ตกลง</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let products = [];
+        let users = [];
+        let orders = [];
+        let cart = [];
+        let editingProductId = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataFromStorage();
+            showSection('dashboard');
+            updateDashboard();
+            updateCartDisplay();
+        });
+
+        // บันทึกข้อมูลลง localStorage
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('shop_products', JSON.stringify(products));
+                localStorage.setItem('shop_users', JSON.stringify(users));
+                localStorage.setItem('shop_orders', JSON.stringify(orders));
+                localStorage.setItem('shop_cart', JSON.stringify(cart));
+                console.log('ข้อมูลถูกบันทึกแล้ว');
+            } catch (error) {
+                console.error('Error saving data to localStorage:', error);
+            }
+        }
+
+        // โหลดข้อมูลจาก localStorage
+        function loadDataFromStorage() {
+            try {
+                const savedProducts = localStorage.getItem('shop_products');
+                const savedUsers = localStorage.getItem('shop_users');
+                const savedOrders = localStorage.getItem('shop_orders');
+                const savedCart = localStorage.getItem('shop_cart');
+
+                if (savedProducts) {
+                    products = JSON.parse(savedProducts);
+                } else {
+                    loadSampleProducts();
+                }
+
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                } else {
+                    loadSampleUsers();
+                }
+
+                if (savedOrders) {
+                    orders = JSON.parse(savedOrders);
+                }
+
+                if (savedCart) {
+                    cart = JSON.parse(savedCart);
+                }
+
+                // โหลดข้อมูลไปยัง UI
+                loadProductsTable();
+                loadUsersTable();
+                loadShopProducts();
+                loadOrdersTable();
+                updateCategoryFilter();
+                updateReports();
+                console.log('ข้อมูลถูกโหลดแล้ว');
+            } catch (error) {
+                console.error('Error loading data from localStorage:', error);
+                loadSampleData();
+            }
+        }
+
+        // โหลดข้อมูลตัวอย่างสินค้า
+        function loadSampleProducts() {
+            products = [
+                {
+                    id: 1,
+                    name: 'iPhone 15 Pro',
+                    price: 45900,
+                    discount: 10,
+                    category: 'มือถือ',
+                    description: 'iPhone รุ่นล่าสุด พร้อมชิป A17 Pro',
+                    image: 'https://via.placeholder.com/300x300?text=iPhone+15+Pro'
+                },
+                {
+                    id: 2,
+                    name: 'Samsung Galaxy S24',
+                    price: 35900,
+                    discount: 15,
+                    category: 'มือถือ',
+                    description: 'Samsung Galaxy S24 พร้อม AI ล่าสุด',
+                    image: 'https://via.placeholder.com/300x300?text=Galaxy+S24'
+                },
+                {
+                    id: 3,
+                    name: 'MacBook Air M3',
+                    price: 42900,
+                    discount: 5,
+                    category: 'คอมพิวเตอร์',
+                    description: 'MacBook Air ชิป M3 ประสิทธิภาพสูง',
+                    image: 'https://via.placeholder.com/300x300?text=MacBook+Air'
+                }
+            ];
+        }
+
+        // โหลดข้อมูลตัวอย่างผู้ใช้
+        function loadSampleUsers() {
+            users = [
+                { id: 1, name: 'สมชาย ใจดี', email: 'somchai@email.com', phone: '081-234-5678', role: 'user' },
+                { id: 2, name: 'สมหญิง รักดี', email: 'somying@email.com', phone: '082-345-6789', role: 'user' }
+            ];
+        }
+
+        // Load sample data (สำหรับใช้เมื่อไม่มีข้อมูลใน localStorage)
+        function loadSampleData() {
+            loadSampleProducts();
+            loadSampleUsers();
+            loadProductsTable();
+            loadUsersTable();
+            loadShopProducts();
+            updateCategoryFilter();
+        }
+
+        // ล้างข้อมูลทั้งหมด
+        function clearAllData() {
+            if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+                localStorage.removeItem('shop_products');
+                localStorage.removeItem('shop_users');
+                localStorage.removeItem('shop_orders');
+                localStorage.removeItem('shop_cart');
+                
+                products = [];
+                users = [];
+                orders = [];
+                cart = [];
+                
+                loadSampleData();
+                updateDashboard();
+                updateCartDisplay();
+                updateReports();
+                
+                showSuccessMessage('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว');
+            }
+        }
+
+        // Menu toggle for mobile
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Show section
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionName).classList.remove('hidden');
+            document.getElementById(sectionName).classList.add('fade-in');
+
+            // Close mobile menu
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+
+        // Update dashboard statistics
+        function updateDashboard() {
+            document.getElementById('totalProducts').textContent = products.length;
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('totalOrders').textContent = orders.length;
+            
+            const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+            document.getElementById('totalSales').textContent = `฿${totalSales.toLocaleString()}`;
+        }
+
+        // Product management functions
+        function showAddProductForm() {
+            document.getElementById('addProductForm').classList.remove('hidden');
+        }
+
+        function hideAddProductForm() {
+            document.getElementById('addProductForm').classList.add('hidden');
+            clearProductForm();
+        }
+
+        function clearProductForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productDiscount').value = '';
+            document.getElementById('productCategory').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productImage').value = '';
+        }
+
+        function addProduct() {
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const discount = parseFloat(document.getElementById('productDiscount').value) || 0;
+            const category = document.getElementById('productCategory').value;
+            const description = document.getElementById('productDescription').value;
+            const image = document.getElementById('productImage').value || 'https://via.placeholder.com/300x300?text=No+Image';
+
+            if (!name || !price || !category) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            const newProduct = {
+                id: Date.now(),
+                name,
+                price,
+                discount,
+                category,
+                description,
+                image
+            };
+
+            products.push(newProduct);
+            saveDataToStorage(); // บันทึกข้อมูล
+            loadProductsTable();
+            loadShopProducts();
+            updateCategoryFilter();
+            updateDashboard();
+            hideAddProductForm();
+            showSuccessMessage('เพิ่มสินค้าเรียบร้อยแล้ว');
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            editingProductId = id;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductPrice').value = product.price;
+            document.getElementById('editProductDiscount').value = product.discount;
+            document.getElementById('editProductCategory').value = product.category;
+            document.getElementById('editProductDescription').value = product.description;
+            document.getElementById('editProductImage').value = product.image;
+            
+            document.getElementById('editProductForm').classList.remove('hidden');
+        }
+
+        function hideEditProductForm() {
+            document.getElementById('editProductForm').classList.add('hidden');
+            editingProductId = null;
+        }
+
+        function updateProduct() {
+            if (!editingProductId) return;
+
+            const name = document.getElementById('editProductName').value;
+            const price = parseFloat(document.getElementById('editProductPrice').value);
+            const discount = parseFloat(document.getElementById('editProductDiscount').value) || 0;
+            const category = document.getElementById('editProductCategory').value;
+            const description = document.getElementById('editProductDescription').value;
+            const image = document.getElementById('editProductImage').value;
+
+            if (!name || !price || !category) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            const productIndex = products.findIndex(p => p.id === editingProductId);
+            if (productIndex !== -1) {
+                products[productIndex] = {
+                    ...products[productIndex],
+                    name,
+                    price,
+                    discount,
+                    category,
+                    description,
+                    image
+                };
+
+                saveDataToStorage(); // บันทึกข้อมูล
+                loadProductsTable();
+                loadShopProducts();
+                updateCategoryFilter();
+                hideEditProductForm();
+                showSuccessMessage('แก้ไขสินค้าเรียบร้อยแล้ว');
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('คุณต้องการลบสินค้านี้หรือไม่?')) {
+                products = products.filter(p => p.id !== id);
+                saveDataToStorage(); // บันทึกข้อมูล
+                loadProductsTable();
+                loadShopProducts();
+                updateCategoryFilter();
+                updateDashboard();
+                showSuccessMessage('ลบสินค้าเรียบร้อยแล้ว');
+            }
+        }
+
+        function loadProductsTable() {
+            const tbody = document.getElementById('productsTable');
+            tbody.innerHTML = '';
+
+            products.forEach(product => {
+                const discountedPrice = product.price * (1 - product.discount / 100);
+                const row = `
+                    <tr class="border-b">
+                        <td class="p-4">
+                            <img src="${product.image}" alt="${product.name}" class="w-16 h-16 object-cover rounded" onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'">
+                        </td>
+                        <td class="p-4">${product.name}</td>
+                        <td class="p-4">
+                            ${product.discount > 0 ? 
+                                `<span class="line-through text-gray-500">฿${product.price.toLocaleString()}</span><br>
+                                 <span class="text-red-600 font-bold">฿${discountedPrice.toLocaleString()}</span>` :
+                                `฿${product.price.toLocaleString()}`
+                            }
+                        </td>
+                        <td class="p-4">${product.discount > 0 ? `${product.discount}%` : '-'}</td>
+                        <td class="p-4">${product.category}</td>
+                        <td class="p-4">
+                            <button onclick="editProduct(${product.id})" class="bg-yellow-500 text-white px-3 py-1 rounded mr-2 hover:bg-yellow-600">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteProduct(${product.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // User management functions
+        function showAddUserForm() {
+            document.getElementById('addUserForm').classList.remove('hidden');
+        }
+
+        function hideAddUserForm() {
+            document.getElementById('addUserForm').classList.add('hidden');
+            clearUserForm();
+        }
+
+        function clearUserForm() {
+            document.getElementById('userName').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userPhone').value = '';
+            document.getElementById('userRole').value = 'user';
+        }
+
+        function addUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const phone = document.getElementById('userPhone').value;
+            const role = document.getElementById('userRole').value;
+
+            if (!name || !email || !phone) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                phone,
+                role
+            };
+
+            users.push(newUser);
+            saveDataToStorage(); // บันทึกข้อมูล
+            loadUsersTable();
+            updateDashboard();
+            hideAddUserForm();
+            showSuccessMessage('เพิ่มผู้ใช้เรียบร้อยแล้ว');
+        }
+
+        function deleteUser(id) {
+            if (confirm('คุณต้องการลบผู้ใช้นี้หรือไม่?')) {
+                users = users.filter(u => u.id !== id);
+                saveDataToStorage(); // บันทึกข้อมูล
+                loadUsersTable();
+                updateDashboard();
+                showSuccessMessage('ลบผู้ใช้เรียบร้อยแล้ว');
+            }
+        }
+
+        function loadUsersTable() {
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const row = `
+                    <tr class="border-b">
+                        <td class="p-4">${user.name}</td>
+                        <td class="p-4">${user.email}</td>
+                        <td class="p-4">${user.phone}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-sm ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">
+                                ${user.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้ทั่วไป'}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <button onclick="deleteUser(${user.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Shop functions
+        function loadShopProducts() {
+            const container = document.getElementById('shopProducts');
+            container.innerHTML = '';
+
+            products.forEach(product => {
+                const discountedPrice = product.price * (1 - product.discount / 100);
+                const productCard = `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">${product.name}</h3>
+                            <p class="text-gray-600 text-sm mb-3">${product.description}</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    ${product.discount > 0 ? 
+                                        `<span class="line-through text-gray-500 text-sm">฿${product.price.toLocaleString()}</span><br>
+                                         <span class="text-red-600 font-bold text-lg">฿${discountedPrice.toLocaleString()}</span>
+                                         <span class="bg-red-500 text-white text-xs px-2 py-1 rounded ml-2">-${product.discount}%</span>` :
+                                        `<span class="text-gray-800 font-bold text-lg">฿${product.price.toLocaleString()}</span>`
+                                    }
+                                </div>
+                            </div>
+                            <button onclick="addToCart(${product.id})" class="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-shopping-cart mr-2"></i>หยิบใส่ตะกร้า
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += productCard;
+            });
+        }
+
+        function updateCategoryFilter() {
+            const select = document.getElementById('filterCategory');
+            const categories = [...new Set(products.map(p => p.category))];
+            
+            select.innerHTML = '<option value="">ทุกหมวดหมู่</option>';
+            categories.forEach(category => {
+                select.innerHTML += `<option value="${category}">${category}</option>`;
+            });
+        }
+
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchProducts').value.toLowerCase();
+            const selectedCategory = document.getElementById('filterCategory').value;
+            
+            let filteredProducts = products;
+            
+            if (searchTerm) {
+                filteredProducts = filteredProducts.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) || 
+                    p.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (selectedCategory) {
+                filteredProducts = filteredProducts.filter(p => p.category === selectedCategory);
+            }
+            
+            displayFilteredProducts(filteredProducts);
+        }
+
+        function displayFilteredProducts(filteredProducts) {
+            const container = document.getElementById('shopProducts');
+            container.innerHTML = '';
+
+            filteredProducts.forEach(product => {
+                const discountedPrice = product.price * (1 - product.discount / 100);
+                const productCard = `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">${product.name}</h3>
+                            <p class="text-gray-600 text-sm mb-3">${product.description}</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    ${product.discount > 0 ? 
+                                        `<span class="line-through text-gray-500 text-sm">฿${product.price.toLocaleString()}</span><br>
+                                         <span class="text-red-600 font-bold text-lg">฿${discountedPrice.toLocaleString()}</span>
+                                         <span class="bg-red-500 text-white text-xs px-2 py-1 rounded ml-2">-${product.discount}%</span>` :
+                                        `<span class="text-gray-800 font-bold text-lg">฿${product.price.toLocaleString()}</span>`
+                                    }
+                                </div>
+                            </div>
+                            <button onclick="addToCart(${product.id})" class="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-shopping-cart mr-2"></i>หยิบใส่ตะกร้า
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += productCard;
+            });
+        }
+
+        // Cart functions
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    discount: product.discount,
+                    quantity: 1
+                });
+            }
+
+            saveDataToStorage(); // บันทึกข้อมูล
+            updateCartDisplay();
+            
+            // Add bounce animation to cart icon
+            const cartIcon = document.querySelector('.fas.fa-shopping-cart');
+            cartIcon.classList.add('cart-bounce');
+            setTimeout(() => cartIcon.classList.remove('cart-bounce'), 300);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveDataToStorage(); // บันทึกข้อมูล
+            updateCartDisplay();
+        }
+
+        function updateCartQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            if (!item) return;
+
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                removeFromCart(productId);
+            } else {
+                saveDataToStorage(); // บันทึกข้อมูล
+                updateCartDisplay();
+            }
+        }
+
+        function updateCartDisplay() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartItemCount = document.getElementById('cartItemCount');
+            const cartCount = document.getElementById('cartCount');
+            const cartTotal = document.getElementById('cartTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            // Update cart count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartItemCount.textContent = totalItems;
+            cartCount.textContent = totalItems;
+
+            // Update cart items display
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                const discountedPrice = item.price * (1 - item.discount / 100);
+                const itemTotal = discountedPrice * item.quantity;
+                total += itemTotal;
+
+                const cartItem = `
+                    <div class="flex items-center justify-between p-3 border rounded">
+                        <div class="flex-1">
+                            <h4 class="font-medium">${item.name}</h4>
+                            <p class="text-sm text-gray-600">฿${discountedPrice.toLocaleString()} x ${item.quantity}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCartQuantity(${item.id}, -1)" class="bg-gray-300 text-gray-700 w-8 h-8 rounded">-</button>
+                            <span class="w-8 text-center">${item.quantity}</span>
+                            <button onclick="updateCartQuantity(${item.id}, 1)" class="bg-gray-300 text-gray-700 w-8 h-8 rounded">+</button>
+                            <button onclick="removeFromCart(${item.id})" class="bg-red-500 text-white w-8 h-8 rounded ml-2">×</button>
+                        </div>
+                    </div>
+                `;
+                cartItemsContainer.innerHTML += cartItem;
+            });
+
+            // Update total
+            cartTotal.textContent = `฿${total.toLocaleString()}`;
+
+            // Enable/disable checkout button
+            checkoutBtn.disabled = cart.length === 0;
+        }
+
+        function checkout() {
+            if (cart.length === 0) return;
+
+            const total = cart.reduce((sum, item) => {
+                const discountedPrice = item.price * (1 - item.discount / 100);
+                return sum + (discountedPrice * item.quantity);
+            }, 0);
+
+            const order = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('th-TH'),
+                items: [...cart],
+                total: total,
+                status: 'ชำระเงินแล้ว'
+            };
+
+            orders.push(order);
+            cart = [];
+            
+            saveDataToStorage(); // บันทึกข้อมูล
+            updateCartDisplay();
+            loadOrdersTable();
+            updateDashboard();
+            updateReports();
+            
+            showSuccessMessage('ชำระเงินสำเร็จ! คำสั่งซื้อถูกบันทึกแล้ว');
+            
+            // Auto switch to orders section after 2 seconds
+            setTimeout(() => {
+                showSection('orders');
+            }, 2000);
+        }
+
+        // Orders functions
+        function loadOrdersTable() {
+            const tbody = document.getElementById('ordersTable');
+            tbody.innerHTML = '';
+
+            orders.forEach(order => {
+                const itemsList = order.items.map(item => `${item.name} (${item.quantity})`).join(', ');
+                const row = `
+                    <tr class="border-b">
+                        <td class="p-4">#${order.id}</td>
+                        <td class="p-4">${order.date}</td>
+                        <td class="p-4">${itemsList}</td>
+                        <td class="p-4">฿${order.total.toLocaleString()}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-sm bg-green-100 text-green-800">
+                                ${order.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Reports functions
+        function updateReports() {
+            updateTopProducts();
+            updateSalesStats();
+        }
+
+        function updateTopProducts() {
+            const productSales = {};
+            
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (productSales[item.name]) {
+                        productSales[item.name] += item.quantity;
+                    } else {
+                        productSales[item.name] = item.quantity;
+                    }
+                });
+            });
+
+            const sortedProducts = Object.entries(productSales)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+
+            const container = document.getElementById('topProducts');
+            container.innerHTML = '';
+
+            if (sortedProducts.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">ยังไม่มีข้อมูลการขาย</p>';
+                return;
+            }
+
+            sortedProducts.forEach(([productName, quantity], index) => {
+                const item = `
+                    <div class="flex justify-between items-center p-2 border-b">
+                        <span>${index + 1}. ${productName}</span>
+                        <span class="font-bold">${quantity} ชิ้น</span>
+                    </div>
+                `;
+                container.innerHTML += item;
+            });
+        }
+
+        function updateSalesStats() {
+            const container = document.getElementById('salesStats');
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+            const averageOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span>จำนวนคำสั่งซื้อ:</span>
+                        <span class="font-bold">${totalOrders}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>รายได้รวม:</span>
+                        <span class="font-bold">฿${totalRevenue.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>ค่าเฉลี่ยต่อคำสั่งซื้อ:</span>
+                        <span class="font-bold">฿${averageOrder.toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Success modal functions
+        function showSuccessMessage(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+        }
+
+        // Initialize reports on load
+        updateReports();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9768c3e93024731c',t:'MTc1NjQzNjA4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
